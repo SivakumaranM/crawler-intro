@@ -1,0 +1,755 @@
+function handleReferrerCookie() {
+    try {
+        var http = location.protocol + "//";
+        var requestUrlHost = http.concat(window.location.hostname) + '/';
+
+        var referrerParam = getUrlParameters(document.location.search);
+
+        var referrerHost = "";
+        if ((typeof(document.referrer) != "undefined") || (document.referrer != "")) {
+            var a=document.createElement('a');
+            a.href=document.referrer;
+            referrerHost = a.protocol + "//" + a.host + "/";
+        }
+
+        var isGoogleReferrer = (typeof(referrerHost) != "undefined") ? referrerHost.search(/www.google/i) : -1;
+        var gclidExists = (typeof(referrerParam.gclid) != "undefined") ? true : false;
+        var utmSource = (typeof(referrerParam.utm_source) != "undefined") ? referrerParam.utm_source : "";
+
+        var referrerCookieVal = "";
+        if (utmSource != "") {
+            referrerCookieVal = utmSource;
+        } else if (typeof(referrerHost) != "undefined" & isGoogleReferrer != -1) {
+            referrerCookieVal = (gclidExists) ? "sem" : "seo";    
+        } else if (gclidExists) {
+            referrerCookieVal = "gdn";
+        } else if ((referrerHost == "" || (referrerHost == requestUrlHost)) && !$.cookie('referrer')) {
+            referrerCookieVal = "direct";
+        }
+
+        if (referrerCookieVal != "") {
+           $.cookie('referrer', referrerCookieVal, { expires : 30, path : "/"});        
+        }
+    } catch(err) {}
+}
+handleReferrerCookie();
+
+if (typeof (tpuEnabled) == 'undefined') {
+    //it will be undefined only if tracking pixel url enable
+    tpuEnabled = 1;
+}
+//console.log(tpuEnabled);
+//webengage
+var _weq = _weq || {};
+_weq['webengage.licenseCode'] = '82617218';
+_weq['webengage.widgetVersion'] = "4.0";
+_weq["webengage.notification.enableCallbacks"] = true;
+
+var pageType = typeof (globalConfig.pagetype) != "undefined" ? globalConfig.pagetype : '';
+var cookieCount = typeof (getCookie('webengager')) != 'undefined' ? parseInt(getCookie('webengager')) + 1 : 0;
+var notificationCount = typeof (globalConfig.customer) != 'undefined'
+        ? (typeof (globalConfig.customer.notificationcount) != 'undefined' ? globalConfig.customer.notificationcount : cookieCount)
+        : cookieCount;
+
+if (typeof (globalConfig) != 'undefined' && (pageType == 'catalog' || pageType == 'product_details' || pageType == 'cart') && notificationCount < 5) {
+
+    var userData = {
+        firstName: typeof (globalConfig.customer.firstName) != 'undefined' ? globalConfig.customer.firstName : '',
+        lastName: typeof (globalConfig.customer.lastName) != 'undefined' ? globalConfig.customer.lastName : '',
+        email: typeof (globalConfig.customer.email) != 'undefined' ? globalConfig.customer.email : '',
+        city: typeof (globalConfig.customer.city) != 'undefined' ? globalConfig.customer.city : '',
+        segmentScore: typeof (globalConfig.customer.segment) != 'undefined' ? parseInt(globalConfig.customer.segment) : '',
+        discountScore: typeof (globalConfig.customer.discount_score) != 'undefined' ? parseInt(globalConfig.customer.discount_score) : '',
+        MvpScore: typeof (globalConfig.customer.mvp_score) != 'undefined' ? parseInt(globalConfig.customer.mvp_score) : '',
+        recency: typeof (globalConfig.customer.recency) != 'undefined' ? parseInt(globalConfig.customer.recency) : '',
+        frequency: typeof (globalConfig.customer.frequency) != 'undefined' ? parseInt(globalConfig.customer.frequency) : '',
+        totalOrders: typeof (globalConfig.customer.total_orders) != 'undefined' ? parseInt(globalConfig.customer.total_orders) : '',
+        affiliatePartner: typeof (globalConfig.customer.partnerName) != 'undefined' ? globalConfig.customer.partnerName : '',
+        gender: typeof (globalConfig.customer.gender) != 'undefined' ? globalConfig.customer.gender : '',
+        customerType: typeof (globalConfig.customer.reward_type) != 'undefined' ? globalConfig.customer.reward_type : ''
+    };
+
+    _weq['webengage.notification.tokens'] = {
+        firstName: typeof (globalConfig.customer.firstName) != 'undefined' ? globalConfig.customer.firstName : '',
+        lastName: typeof (globalConfig.customer.lastName) != 'undefined' ? globalConfig.customer.lastName : '',
+        city: typeof (globalConfig.customer.city) != 'undefined' ? globalConfig.customer.city : '',
+        affiliatePartner: typeof (globalConfig.customer.partnerName) != 'undefined' ? globalConfig.customer.partnerName : ''
+    };
+    _weq['webengage.notification.customData'] = userData;
+    _weq['webengage.notification.ruleData'] = userData;
+
+    if (pageType == 'product_details') {
+        var commonData = {
+            category: typeof (globalConfig.product.category) !== 'undefined' ? globalConfig.product.category : '',
+            brand: typeof (globalConfig.product.brand) !== 'undefined' ? globalConfig.product.brand : '',
+            price: typeof (globalConfig.product.rDetails.price) !== 'undefined' ? globalConfig.product.rDetails.price : '',
+            brick: typeof (globalConfig.product.rDetails.brick) !== 'undefined' ? globalConfig.product.rDetails.brick : ''
+        }
+        var customData = commonData, ruleData = commonData;
+        customData.subcategory = typeof (globalConfig.product.subcategory) !== 'undefined'
+                ? globalConfig.product.subcategory : '';
+        $.extend(_weq['webengage.notification.customData'], customData);
+        $.extend(_weq['webengage.notification.ruleData'], ruleData);
+    } else if (pageType == "cart") {
+        var commonData = {
+            totalItems: typeof (globalConfig.noOfItems) !== 'undefined' ? parseInt(globalConfig.noOfItems) : 0,
+            orderValue: typeof (globalConfig.ordervalue) !== 'undefined' ? parseInt(globalConfig.ordervalue) : 0,
+            cartCategory: typeof (globalConfig.category) !== 'undefined' ? globalConfig.category : '',
+            cartSubcategory: typeof (globalConfig.subcategory) !== 'undefined' ? globalConfig.subcategory : '',
+            cartBrand: typeof (globalConfig.mostimpbrand) !== 'undefined' ? globalConfig.mostimpbrand : ''
+        }
+        var customData = commonData, ruleData = commonData;
+        $.extend(_weq['webengage.notification.customData'], customData);
+        $.extend(_weq['webengage.notification.ruleData'], ruleData);
+    }
+
+
+    _weq['webengage.notification.onOpen'] = function () {
+        setCookie('webengager', notificationCount);
+    };
+    function loadWebengagePixelJs ()
+    {
+        (function (d) {
+            var _we = d.createElement('script');
+            _we.type = 'text/javascript';
+            _we.async = true;
+            _we.src = (d.location.protocol == 'https:' ? "https://ssl.widgets.webengage.com" : "http://cdn.widgets.webengage.com") + "/js/widget/webengage-min-v-4.0.js";
+            var _sNode = d.getElementsByTagName('script')[0];
+            _sNode.parentNode.insertBefore(_we, _sNode);
+        })(document);
+    }
+    if (tpuEnabled) {
+        loadWebengagePixelJs();
+    } else {
+        $(window).load(function () {
+            loadWebengagePixelJs();
+        });
+    }
+
+}
+//webengage
+
+//sociomantic pixel start
+try {
+    if (globalConfig.hasOwnProperty('pagetype') && (typeof (globalConfig.hasOnlyVirtualProduct) == 'undefined' || globalConfig.hasOnlyVirtualProduct == 0)) {
+        var sociomanticPageParams = {
+            homepage: {customerid: "**globalConfig.identifier**"},
+            onecheckout: {customerid: "**globalConfig.customerId**"},
+            static: {customerid: "**globalConfig.identifier**"},
+            segment: {customerid: "**globalConfig.identifier**"},
+            catalog: {jsCatalogVar: (globalConfig.jsCatalogVar) ? globalConfig.jsCatalogVar : '', customerTag: "**globalConfig.customerTag**", customerid: "**globalConfig.identifier**"},
+            product_details: {productId: "**globalConfig.product.id**", category: "**globalConfig.product.category**", subcategory: "**globalConfig.product.subcategory**",
+                customerTag: "**globalConfig.customerTag**", customerid: "**globalConfig.identifier**"
+            },
+            product_quickview: {productId: "**globalConfig.product.id**", category: "**globalConfig.product.category**", subcategory: "**globalConfig.product.subcategory**",
+                customerTag: "**globalConfig.customerTag**", customerid: "**globalConfig.identifier**"
+            },
+            cart: {basketVar: (globalConfig.basketVar) ? globalConfig.basketVar : '', customerTag: "**globalConfig.customerTag**", customerid: "**globalConfig.identifier**"},
+            success: {basketVar: (globalConfig.basketVar) ? globalConfig.basketVar : '', customerTag: "**globalConfig.customerTag**", orderNo: "**globalConfig.transaction.order_id**", totalPrice: "**globalConfig.transaction.total**", hasOnlyVirtualProduct: "**hasOnlyVirtualProduct**", customerid: "**globalConfig.identifier**"}
+        };
+        if (sociomanticPageParams[globalConfig.pagetype]) {
+            var parameters = sociomanticPageParams[globalConfig.pagetype];
+            parameters = getParammeterArray(parameters);
+            var basket = {};
+            var customer = {
+                "identifier": parameters['customerid']
+            };
+            switch (globalConfig.pagetype) {
+                case 'catalog' :
+                    var product = {
+                        "category": parameters['jsCatalogVar']
+                    };
+                    customer.segment = parameters['customerTag'];
+                    break;
+                case 'product_details' :
+                    var product = {
+                        "identifier": parameters['productId'], 'category': (parameters['subcategory'] != '') ? parameters['subcategory'] : parameters['category']
+                    };
+                    customer.segment = parameters['customerTag'];
+                    break;
+                case 'product_quickview':
+                    sociomantic.sonar.adv['jabong-in'].clear();
+                    var product = {
+                        identifier: parameters['productId'], 'category': (parameters['subcategory'] != '') ? parameters['subcategory'] : parameters['category']
+                    };
+                    customer.segment = parameters['customerTag'];
+                    sociomantic.sonar.adv['jabong-in'].track();
+                    break;
+                case 'cart':
+                    if (parameters.basketVar != '') {
+                        basket = {"products": parameters.basketVar};
+                        customer.segment = parameters['customerTag'];
+                    }
+                    break;
+                case 'success':
+                    if (parameters['basketVar'] != '') {
+                        basket = {"products": parameters['basketVar'],
+                            "transaction": parameters['orderNo'],
+                            "amount": parameters['totalPrice'],
+                            "currency": 'INR'
+                        };
+
+                        customer.segment = parameters['customerTag'];
+                    }
+                    break;
+            }
+            if (globalConfig.pagetype != 'product_quickview') {
+                function loadSociomanticJs () {
+                    var s = document.createElement('script');
+                    s.id = 'sonar-adpan';
+                    s.type = 'text/javascript';
+                    s.async = true;
+                    s.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'ap-sonar.sociomantic.com/js/2010-07-01/adpan/jabong-in';
+                    document.body.appendChild(s);
+                }
+                if (tpuEnabled) {
+                    loadSociomanticJs();
+                } else {
+                    $(window).load(function () {
+                        loadSociomanticJs();
+                    });
+                }
+            }
+
+        }
+    }
+} catch (err) {
+}
+//sociomantic pixel end
+
+var pageTypeVal = getGlobalConfigVar("globalConfig.pagetype");
+function criteo_pixel () {
+    if (typeof (globalConfig) !== 'undefined' && globalConfig.hasOwnProperty('pagetype')) {
+        switch (globalConfig.pagetype) {
+            case 'homepage':
+            case 'segment' :
+                var eventObj = {event: "viewHome"};
+                break;
+            case 'catalog':
+                var eventObj = {event: "viewList", item: globalConfig.items, keywords: globalConfig.keywords}
+                break;
+            case 'product_details':
+                var eventObj = {event: "viewItem", item: globalConfig.product.id};
+                break;
+            case 'cart':
+                var items = [];
+                for (var i in  basketList) {
+                    items[items.length] = {id: basketList[i].identifier, price: basketList[i].amount, quantity: basketList[i].quantity}
+                }
+                var eventObj = {event: "viewBasket", item: items};
+                break;
+            case 'success':
+                var items = [];
+                for (var i in  basketList) {
+                    items[items.length] = {id: basketList[i].identifier, price: basketList[i].amount, quantity: basketList[i].quantity}
+                }
+                var referrer = readCookie('referrer');
+                var eventObj = {event: "trackTransaction", id: globalConfig.transaction.order_id, new_customer: globalConfig.isNewCustomer, deduplication: (referrer == 'criteo') ? 1 : 0, item: items}
+                break;
+            case 'product_quickview':
+                var eventObj = {event: "viewItem", item: globalConfig.product.id};
+                break;
+        }
+
+        if (eventObj) {
+            $.getScript("//static.criteo.net/js/ld/ld.js", function (data, textStatus, jqxhr) {
+                window.criteo_q = window.criteo_q || [];
+                window.criteo_q.push(
+                        {event: "setAccount", account: 11501},
+                {event: "setCustomerId", id: globalConfig.identifier},
+                {event: "setSiteType", type: "d"},
+                eventObj
+                        );
+            });
+        }
+    }
+}
+
+//yahoo smart ads
+function yahoo_smart_ad () {
+    var cartProductsYSmartAds = '';
+    if (globalConfig.basket && typeof (globalConfig.basket.line_items) != 'undefined' && globalConfig.basket.line_items.length > 0) {
+        cartProductsYSmartAds = globalConfig.basket.line_items.join(';')
+    }
+
+    var SmartAdParameters = {
+        cart: {adId: "jabongincartrt", format: "image", useReferrer: "1", force_pids: cartProductsYSmartAds},
+        product_details: {adId: "jabongidrt", format: "image", useReferrer: "1", "force_pid": "**globalConfig.product.id**", "force_cid": "**globalConfig.categoryId**", "force_scid": "**globalConfig.subtypeId**", "force_scid2": "**globalConfig.subcategoryId**"},
+        product_quickview: {adId: "jabongidrt", format: "image", useReferrer: "1", "force_pid": "**globalConfig.product.id**", "force_cid": "**globalConfig.categoryId**", "force_scid": "**globalConfig.subtypeId**", "force_scid2": "**globalConfig.subcategoryId**"}
+    };
+
+    var RMXConversionParameters = {
+        success: {id: "1789606", t: "2"}
+    };
+    var RMXSegmentParameters = {
+        cart: {id: "2191302", t: "2"},
+        catalog: {id: "1644802", t: "2"},
+        product_details: {id: "2131174", t: "2"},
+        product_quickview: {id: "2131174", t: "2"},
+        success: {id: "2191303", t: "2"}
+    };
+
+    var RMXSegmentQString = '';
+    var RMXConversionQString = '';
+    var SmartAdQString = '';
+
+    if (globalConfig.pagetype && RMXSegmentParameters[globalConfig.pagetype]) {
+        var parametersYSmartAds = RMXSegmentParameters[globalConfig.pagetype];
+        RMXSegmentQString = buildQueryString(parametersYSmartAds);
+    }
+    if (RMXSegmentQString) {
+        RMXSegmentQString = RMXSegmentQString.substring(1);
+        $('body').append('<img src="http://ad.yieldmanager.com/pixel?' + RMXSegmentQString + '" width="1" height="1" />');
+    }
+
+    if (globalConfig.pagetype && RMXConversionParameters[globalConfig.pagetype]) {
+        var parametersYSmartAds = RMXConversionParameters[globalConfig.pagetype];
+        RMXConversionQString = buildQueryString(parametersYSmartAds);
+    }
+    if (RMXConversionQString) {
+        RMXConversionQString = RMXConversionQString.substring(1);
+        $('body').append('<img src="http://ad.yieldmanager.com/pixel?' + RMXConversionQString + '" width="1" height="1" />');
+    }
+
+    if (globalConfig.pagetype && SmartAdParameters[globalConfig.pagetype]) {
+        var parametersYSmartAds = SmartAdParameters[globalConfig.pagetype];
+        SmartAdQString = buildQueryString(parametersYSmartAds);
+    }
+    if (SmartAdQString) {
+        SmartAdQString = SmartAdQString.substring(1);
+        $('body').append('<img width="1" height="1" border="0" alt="" src="http://pm.ap.dp.yieldmanager.net/PixelMonkey?' + SmartAdQString + '"/>');
+    }
+}
+try {
+    if (window.jQuery && typeof (globalConfig) !== 'undefined' && globalConfig.hasOwnProperty('pagetype') && globalConfig.pagetype != "cart") {
+        if (tpuEnabled || (globalConfig.pagetype == 'product_quickview')) {
+            yahoo_smart_ad()
+        } else {
+            $(window).load(function () {
+                yahoo_smart_ad();
+            });
+        }
+    }
+} catch (err) {
+}
+//yahoo smart ads
+
+
+//Google Rmktg
+try {
+    var sourceLevel = (getCookie("level") ? getCookie("level") : "");
+    var googleTagParams = {
+        cart: {
+            page: "**globalConfig.pageRank**.cart",
+            category: "**globalConfig.pageRank**.**globalConfig.category**",
+            subcategory: (globalConfig.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.subcategory**" : "",
+            prodid: "",
+            brand: "",
+            gender: "",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "",
+            mostimpbrand: "**globalConfig.pageRank**.**globalConfig.mostimpbrand**",
+            ordervalue: "**globalConfig.ordervalue**",
+            impliedgender: "**globalConfig.pageRank**.**globalConfig.impliedgender**",
+            source: sourceLevel
+        },
+        catalog: {
+            page: "**globalConfig.pageRank**.**globalConfig.pageName**",
+            category: "**globalConfig.pageRank**.**globalConfig.page.category**",
+            subcategory: (globalConfig.page && globalConfig.page.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.page.subcategory**" : '',
+            prodid: "",
+            brand: "**globalConfig.pageRank**.**globalConfig.brand**",
+            gender: "**globalConfig.pageRank**.**globalConfig.gender**",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "",
+            mostimpbrand: "",
+            ordervalue: "",
+            impliedgender: "",
+            source: sourceLevel
+        },
+        homepage: {
+            page: "**globalConfig.pageRank**.homepage",
+            category: "",
+            subcategory: "",
+            prodid: "",
+            brand: "",
+            gender: "",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "",
+            mostimpbrand: "",
+            ordervalue: "",
+            impliedgender: "",
+            source: sourceLevel
+        },
+        onecheckout: {
+            page: "**globalConfig.pageRank**.checkout",
+            category: "**globalConfig.pageRank**.**globalConfig.category**",
+            subcategory: (globalConfig.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.subcategory**" : '',
+            prodid: "",
+            brand: "",
+            gender: "",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "",
+            mostimpbrand: "**globalConfig.pageRank**.**globalConfig.brand**",
+            ordervalue: "**globalConfig.ordervalue**",
+            impliedgender: "**globalConfig.pageRank**.**globalConfig.gender**",
+            source: sourceLevel
+        },
+        product_details: {
+            page: "**globalConfig.pageRank**.product",
+            category: "**globalConfig.pageRank**.**globalConfig.product.category**",
+            subcategory: (globalConfig.product && globalConfig.product.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.product.subcategory**" : '',
+            prodid: "**globalConfig.product.id**",
+            brand: "**globalConfig.pageRank**.**globalConfig.product.brand**",
+            gender: "**globalConfig.pageRank**.**globalConfig.product.gender**",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "**globalConfig.product.price**",
+            mostimpbrand: "",
+            ordervalue: "",
+            impliedgender: "",
+            source: sourceLevel
+        },
+        product_quickview: {
+            page: "**globalConfig.pageRank**.product",
+            category: "**globalConfig.pageRank**.**globalConfig.product.category**",
+            subcategory: (globalConfig.product && globalConfig.product.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.product.subcategory**" : '',
+            prodid: "**globalConfig.product.id**",
+            brand: "**globalConfig.pageRank**.**globalConfig.product.brand**",
+            gender: "**globalConfig.pageRank**.**globalConfig.product.gender**",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "**globalConfig.product.price**",
+            mostimpbrand: "",
+            ordervalue: "",
+            impliedgender: "",
+            source: sourceLevel
+        },
+        segment: {
+            page: "**globalConfig.pageRank**.**globalConfig.pageName**",
+            category: "**globalConfig.pageRank**.**globalConfig.category**",
+            subcategory: (globalConfig.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.subcategory**" : '',
+            prodid: "",
+            brand: "**globalConfig.pageRank**.**globalConfig.brand**",
+            gender: "**globalConfig.pageRank**.**globalConfig.gender**",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "",
+            mostimpbrand: "",
+            ordervalue: "",
+            impliedgender: "",
+            source: sourceLevel
+        },
+        wishlist: {
+            page: "**globalConfig.pageRank**.wishlist",
+            category: "**globalConfig.pageRank**.**globalConfig.category**",
+            subcategory: (globalConfig.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.subcategory**" : '',
+            prodid: "",
+            brand: "",
+            gender: "",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype**",
+            price: "",
+            mostimpbrand: "**globalConfig.pageRank**.**globalConfig.brand**",
+            ordervalue: "**globalConfig.totalprice**",
+            impliedgender: "**globalConfig.pageRank**.**globalConfig.gender**",
+            source: sourceLevel
+        },
+        success: {
+            page: "**globalConfig.pageRank**.thank you",
+            category: "**globalConfig.pageRank**.**globalConfig.transaction.category**",
+            subcategory: (globalConfig.transaction && globalConfig.transaction.subcategory != '') ? "**globalConfig.pageRank**.**globalConfig.transaction.subcategory**" : '',
+            prodid: "",
+            brand: "",
+            gender: "",
+            customertype: "**globalConfig.pageRank**.**globalConfig.customertype2**",
+            price: "",
+            mostimpbrand: "**globalConfig.pageRank**.**globalConfig.transaction.brand**",
+            ordervalue: "**globalConfig.transaction.total**",
+            impliedgender: "**globalConfig.pageRank**.**globalConfig.transaction.gender**",
+            source: sourceLevel
+        }
+    }
+
+    var google_conversion_id = 950356619;
+    var google_conversion_label = "yKhgCI3awQQQi5WVxQM";
+    var google_custom_params = {};
+    var google_tag_params = {};
+    var google_remarketing_only = true;
+
+    if (window.jQuery && typeof (globalConfig) !== 'undefined' && globalConfig.hasOwnProperty('pagetype') && googleTagParams[globalConfig.pagetype]) {
+        var parameters = googleTagParams[globalConfig.pagetype];
+        google_custom_params = getParammeterArray(parameters);
+        google_tag_params = google_custom_params;
+        var scriptUrl = '//www.googleadservices.com/pagead/conversion.js';
+        if (tpuEnabled || (globalConfig.pagetype == 'product_quickview')) {
+            loadScript(scriptUrl);
+        } else {
+            $(window).load(function () {
+                loadScript(scriptUrl);
+            });
+        }
+    }
+} catch (err) {
+}
+//Google Rmktg
+
+//Triggit
+try {
+    if (typeof (globalConfig) !== 'undefined' && globalConfig.hasOwnProperty('pagetype')) {
+        var triggitUrl = 'http://a.triggit.com/px';
+        var triggitRegId = 'ew';
+        var jSource = (getCookie("level") ? getCookie("level") : "");
+        var pageParametersTriggit = {
+            catalog: {rtv: "jabong,**globalConfig.page.category**,**globalConfig.page.subcategory**", jsource: jSource},
+            homepage: {rtv: "jabong,jabonggeneral", jsource: jSource},
+            segment: {rtv: "jabong,jabonggeneral"},
+            product_details: {rtv: "jabongproduct,jabong", "ppk": triggitRegId + "**globalConfig.product.id**", jsource: jSource},
+            product_quickview: {rtv: "jabongproduct,jabong", "ppk": triggitRegId + "**globalConfig.product.id**", jsource: jSource},
+            cart: {rtv: "jabong,jabongcart", jsource: jSource},
+            success: {
+                rtv: "jabongthanks",
+                ct: "e5a12f451fe7e346",
+                "ctval1": "purchase",
+                "ctval2": "**globalConfig.transaction.total**",
+                "ctval3": "**globalConfig.transaction.order_id**",
+                "ctval4": "**globalConfig.customerType**",
+                jsource: jSource
+            }
+        };
+        var qStringTriggit = "";
+        if (pageParametersTriggit[globalConfig.pagetype]) {
+            if ((globalConfig.pagetype == 'catalog' && globalConfig.page && globalConfig.page.category == '')
+                    || (globalConfig.pagetype == 'cart' && globalConfig.noOfItems <= 0)) {
+            } else {
+                var parametersTriggit = pageParametersTriggit[globalConfig.pagetype];
+                qStringTriggit = buildQueryString(parametersTriggit);
+            }
+        }
+        if (qStringTriggit) {
+            var imgTag = '<img height="1" width="1" src="' + triggitUrl + '?u=' + triggitRegId + qStringTriggit + '">';
+            if (tpuEnabled || (globalConfig.pagetype == 'product_quickview')) {
+                $('body').append(imgTag);
+            } else {
+                $(window).load(function () {
+                    $('body').append(imgTag);
+                });
+            }
+        }
+    }
+} catch (err) {
+}
+//Triggit
+
+
+function vizuryPixel () {
+    try {
+        var viz = document.createElement("script");
+        viz.type = "text/javascript";
+        viz.async = true;
+        viz.src = ("https:" == document.location.protocol ? "https://ssl.vizury.com" : "http://www.vizury.com") + "/analyze/pixel.php?account_id=VIZVRM163";
+
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(viz, s);
+        viz.onload = function () {
+            try {
+                pixel.parse();
+            } catch (i) {
+            }
+        };
+        viz.onreadystatechange = function () {
+            if (viz.readyState == "complete" || viz.readyState == "loaded") {
+                try {
+                    pixel.parse();
+                } catch (i) {
+                }
+            }
+        };
+    } catch (i) {
+    }
+}
+
+if (tpuEnabled) {
+    criteo_pixel();
+    vizuryPixel();
+} else {
+    if (pageTypeVal == "product_quickview") {
+        vizuryPixel();
+        criteo_pixel();
+    }
+    //vizury
+    //pixel block for Vizury starts here
+    $(window).load(function () {
+
+        if (pageTypeVal != "product_quickview") {
+            criteo_pixel();
+        }
+        if ((window.jQuery && typeof (globalConfig) !== 'undefined' && globalConfig.hasOwnProperty('pagetype')) &&
+                !((globalConfig.pagetype == 'catalog' && globalConfig.page && globalConfig.page.category == ''))) {
+            vizuryPixel();
+        }
+    });
+    //pixel block for Vizury end here
+}
+
+//traffic source level
+setCookie = function (name, value, days) {
+    var expires;
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toGMTString();
+    }
+    else
+        expires = "";
+    document.cookie = name + "=" + value + expires + "; path=/";
+};
+var traffic_source = getGlobalConfigVar("globalConfig.trafficSource");
+if (traffic_source) {
+    var levelArr = {
+        seo_brand: 1,
+        sem_brand: 1,
+        seo_nonbrand: 2,
+        sem_nonbrand: 2,
+        external_display: 3,
+        external_fbpaid: 3,
+        external_thirdpartyemail: 3,
+        direct: 4,
+        crm_newsletter: 5,
+        loggedin_seo_sem: 6,
+        gdn: 7,
+        retargeting: 8,
+        affiliate: 8,
+        social_media: 9,
+        internal_search: 11,
+        special_promo: 12
+    };
+    if (levelArr[traffic_source]) {
+        setCookie('level', levelArr[traffic_source], 30);
+    }
+}
+//traffic source level ends here
+
+
+//Facebook Retargeting pixel
+try {
+  var pageType = typeof (globalConfig.pagetype) != 'undefined' ? globalConfig.pagetype : '';
+  var fbUserData = {
+        'Stage': pageType,
+        'logged-in': typeof (globalConfig.customertype) != 'undefined' && globalConfig.customertype == 'new' ? 0 : 1,
+        'Device': 'Desktop',
+        'OS': typeof (globalConfig.osType) != 'undefined' ? globalConfig.osType : '',
+    };
+   if (pageType == 'catalog') {
+       var customData = {
+         gender: typeof (globalConfig.gender) != 'undefined' ? globalConfig.gender : 'NULL',
+         category: typeof (globalConfig.page.category) !== 'undefined' ? globalConfig.page.category : 'NULL',     
+         subcategory: typeof (globalConfig.page.subcategory) !== 'undefined' ? globalConfig.page.subcategory : 'NULL',
+         brand: typeof (globalConfig.brand) !== 'undefined' ? globalConfig.brand : '',
+        }
+   } else if (pageType == 'product_details') {
+        var customData = {
+	gender: typeof (globalConfig.product.gender) != 'undefined' ? globalConfig.product.gender : '',
+         category: typeof (globalConfig.product.category) !== 'undefined' ? globalConfig.product.category : '', 
+         subcategory: typeof (globalConfig.product.subcategory) !== 'undefined' ? globalConfig.product.subcategory : '',
+         brand: typeof (globalConfig.product.brand) !== 'undefined' ? globalConfig.product.brand : '',
+         price: typeof (globalConfig.product.rDetails.price) !== 'undefined' ? globalConfig.product.rDetails.price : '', 
+         discount: typeof (globalConfig.product.discount) !== 'undefined' ? globalConfig.product.discount : '',
+        }
+        
+    } else if (pageType == "cart") {
+        var customData = {
+          cart_value: typeof (globalConfig.ordervalue) != 'undefined' ? parseInt(globalConfig.ordervalue) : '',
+        }
+}
+
+$.extend(fbUserData, customData);
+
+(function(){
+  window._fbds = window._fbds || {};
+  _fbds.pixelId = 1441016156134813;
+  var fbds = document.createElement('script');
+  fbds.async = true;
+  fbds.src = '//connect.facebook.net/en_US/fbds.js';
+  var s = document.getElementsByTagName('script')[0];
+  s.parentNode.insertBefore(fbds, s);
+})();
+  window._fbq = window._fbq || [];
+  window._fbq.push( [ 'track', pageType, fbUserData]);
+}
+catch(err) { 
+}
+//Facebook Retargeting pixel ends here
+
+//netslave
+var qc_proto = (window.location.protocol == "http:") ? 'http' : 'https';
+function qc_create_cookie (name, value, days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        var expires = "; expires=" + date.toGMTString();
+    } else {
+        var expires = "";
+    }
+    document.cookie = name + "=" + value + expires + "; path=/;";
+}
+
+// Netslave
+function qc_load_qc_pixel (qc_clickid) {
+    var gp = document.createElement('img');
+    var qc_top_doc = '';
+    try {
+        qc_top_doc = encodeURI(top.document.location.href || window.location.href);
+    } catch (err) {
+    }
+    addImage('netslave102');
+    gp.src = qc_proto + "://affiliate.jabong.com/go.cgi?cpid=1&clickid="
+            + encodeURI(qc_clickid) + "&wmid=bcc&target="
+            + encodeURI(document.location.href) + "&ref="
+            + encodeURI(document.referrer) + "&top=" + qc_top_doc;
+    gp.height = 1;
+    gp.width = 2;
+    (document.getElementsByTagName('head')[0] || document.body).appendChild(gp);
+}
+
+//this function will be deleted after testing
+function addImage (imageParam) {
+    var qc_date = new Date().getTime();
+    var testImg = document.createElement('img');
+    testImg.src = qc_proto + "://www.jabong.com/images/jabong/spacer.gif?" + imageParam + "&" + qc_date;
+    testImg.height = '1';
+    testImg.width = '1';
+    (document.getElementsByTagName('head')[0] || document.body).appendChild(testImg);
+}
+
+if (location.hash) {
+    var qc_anchortags = location.hash.substr(1);
+    var pageTypeVal = getGlobalConfigVar("globalConfig.pagetype");
+    if (qc_anchortags.substr(0, 1) == "Q" && pageTypeVal != "product_quickview") {
+        var qc_date = new Date().getTime();
+        addImage('netslave52');
+        qc_clickid = qc_date + '.' + qc_anchortags + '.' + Math.random().toString(36).substring(4);
+        qc_create_cookie('referrer', 'network1', 30);
+        qc_create_cookie("qc_cid", qc_clickid, 30);
+        qc_load_qc_pixel(qc_clickid);
+    }
+}
+
+ function onLoadProductPixel() {
+    var YahooAdditionalPixel = {
+        product_details: {pixelId: "sbokjf6j", format: "image", useReferrer: "1", "additionalParams": "pid:**globalConfig.product.id**;cid:**globalConfig.categoryId**;scid:**globalConfig.subtypeId**;scid2:**globalConfig.subcategoryId**"}
+    }
+    var YahooAdditionalPixelQString = '';
+    if (globalConfig.pagetype && YahooAdditionalPixel[globalConfig.pagetype]) {
+        var parametersYAddPixel = YahooAdditionalPixel[globalConfig.pagetype];
+        YahooAdditionalPixelQString = buildQueryString(parametersYAddPixel);
+    }
+    if (YahooAdditionalPixelQString) {
+        YahooAdditionalPixelQString = YahooAdditionalPixelQString.substring(1);
+        $('body').append('<img width="1" height="1" border="0" alt="" src="http://pm.ap.dp.yahoo.com/PixelMonkey?' + YahooAdditionalPixelQString + '"/>');
+    }
+}
+if (tpuEnabled) {
+    onLoadProductPixel();
+} else {
+    $(window).load(function() {
+        onLoadProductPixel();
+    });
+}
+ 

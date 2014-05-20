@@ -3,6 +3,7 @@ package com.indix.bootcamp.crawler
 import edu.uci.ics.crawler4j.crawler.{Page, WebCrawler}
 import edu.uci.ics.crawler4j.parser.HtmlParseData
 import com.indix.bootcamp.parser.{Parser, FlipkartParser}
+import com.indix.bootcamp.parser.{Parser, JabongParser}
 import java.io.{PrintWriter, File}
 import scala.util.Random
 import edu.uci.ics.crawler4j.url.WebURL
@@ -19,8 +20,10 @@ abstract class BaseCrawler extends WebCrawler {
       An example is provided for reference.
    */
   def excludeFilters = List(
-    "(?i)(.*(\\.(pdf|flv))(\\?.*)*)$"
+    "(?i)(.*(\\.(pdf|flv|css|js|png|gif|jpe?g|bmp|pst|tiff?|mid|mp2|mp3|aif|iff|mp3|mpa|wav|wma|avi|mp4|wmv|7z|deb|rar|tar.gz|zip|zipx|gz"
+             + "|mov|mpeg|ram|m4v|rm|smil|swf))(\\?.*)*)$"
   )
+
 
   override def shouldVisit(url: WebURL): Boolean = {
     val urlStr = url.getURL
@@ -46,3 +49,10 @@ abstract class BaseCrawler extends WebCrawler {
 class FlipkartCrawler extends BaseCrawler {
   override val parser: Parser = new FlipkartParser
 }
+
+
+
+class JabongCrawler extends BaseCrawler {
+  override val parser: Parser = new JabongParser
+}
+
