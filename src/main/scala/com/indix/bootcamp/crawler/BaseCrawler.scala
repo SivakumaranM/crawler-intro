@@ -35,9 +35,11 @@ abstract class BaseCrawler extends WebCrawler {
     page.getParseData match {
       case data: HtmlParseData =>
         val result = parser.parse(data.getHtml, page.getWebURL.getURL)
-        println(s"Parsed successfully as ${result}")
-        writer.append(result.toCsv)
-        writer.append("\n")
+          println(s"Parsed successfully as ${result}")
+          if(result.isValidProductPage) {
+            writer.append(result.toCsv)
+            writer.append("\n")
+          }
     }
   }
 

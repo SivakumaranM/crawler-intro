@@ -15,10 +15,10 @@ object CrawlDriver extends App {
 
   val config = new CrawlConfig()
   config.setCrawlStorageFolder(crawlStorageFolder)
-  config.setPolitenessDelay(100)
+  config.setPolitenessDelay(1000)
   config.setMaxDepthOfCrawling(3)
-  config.setMaxPagesToFetch(5000)
-//  config.setResumableCrawling(true) // Enable as required
+  config.setMaxPagesToFetch(2000)
+  //config.setResumableCrawling(true) // Enable as required
   // TODO: Add proxy support for your crawler to not get blocked.
   /*
     How Proxy works
@@ -45,7 +45,6 @@ object CrawlDriver extends App {
    * URLs that are fetched and then the crawler starts following links
    * which are found in these pages
    */
-  //controller.addSeed("http://www.jabong.com/giordano-Victory-White-P9276-Black-White-Analog-Watch-168020.html")
   controller.addSeed("http://www.jabong.com")
 
   /*
